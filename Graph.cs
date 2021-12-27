@@ -1,27 +1,22 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Lab2
 {
   class Graph
   {
-    private List<List<int>> adjList = new List<List<int>>();
-    
-    public void Add_vertex(List<int> smezhV)
+    private List<List<int>> adjList;
+    private List<int> visited;
+    private int ways_count, start_vertex;
+    public Graph()
     {
-      adjList.Add(smezhV);
+      adjList = new List<List<int>>();
+      visited = new List<int>();
+      ways_count = 0;
     }
     public List<int> Get_adj_vertex(int index)
-    {
-      List<int> temp = new List<int>();
-      foreach (var item in adjList[index])
-      {
-        temp.Add(item);
-      }
-      return temp;
+    {         
+      return adjList[index];
     }
     /// <summary>
     /// Составление списка смежности из матрицы весов дуг
@@ -49,12 +44,9 @@ namespace Lab2
           adj.Add(0);
           flag = true;
         }        
-        if (flag) this.Add_vertex(adj);
+        if (flag) this.adjList.Add(adj);
       }
-    }
-    /// <summary>
-    /// Вывод списка смежности
-    /// </summary>
+    }   
     public void Print_adj_list()
     {
       for (int i = 0; i < adjList.Count; i++)
@@ -67,40 +59,55 @@ namespace Lab2
         Console.WriteLine("");
       }
     }
-    /// <summary>
-    /// Поиск незамкнутых путей
-    /// </summary>
-    public void Search_ways(int way_length)
+    public int Find(int length)
     {
-      int cur_length = 0;      
-      int start_vertex = 1;
-      int cur_vertex;
-      List<int> adjL;
-      for (cur_vertex = start_vertex; cur_vertex < this.adjList.Count; cur_vertex++)      
+      if (length == 1)
       {
-        adjL = new List<int>();
-        adjL = Get_adj_vertex(start_vertex - 1);
-        Console.Write("Смежные вершины для {0} вершины: ", start_vertex);
-        foreach (var item in adjL)
+        for (int i = 0; i < adjList.Count; i++)
         {
-          Console.Write("{0} ", item);
+          if (adjList[i][0] == 0) continue;
+          ways_count += adjList[i].Count;
         }
-        Console.WriteLine();
-        if (adjL[0] == 0)
+      }
+      else
+      {        
+        for (int i = 0; i < adjList.Count; i++)
         {
-          start_vertex++;
-          cur_length = 0;
-          cur_vertex = start_vertex;
-          continue;
-        } else
+          visited.Clear();
+          start_vertex = i + 1;
+          DFS(start_vertex, length);
+        }
+      }
+      return ways_count;
+    }
+    private void DFS(int cur_vertex, int n)
+    {
+      if (n == 0) return;
+      visited.Add(cur_vertex);
+      List<int> adjL = new List<int>();
+      adjL = Get_adj_vertex(cur_vertex - 1);      
+      if (adjL[0] != 0)
+      {
+        if (n == 1)
         {
-          for (int i = 0; i < adjL.Count; i++)
+          ways_count += adjL.Count;
+          foreach (int item in adjL)
           {
-            cur_length++;
-            cur_vertex = adjL[0];
-          }          
+            if (visited.Contains(item)) ways_count--;
+          }
+          return;
         }
-      }      
+        foreach (int vertex in adjL)
+        {
+          if (vertex == start_vertex)
+          {
+            if (n == 1) ways_count--;
+            continue;
+          }       
+          if (!visited.Contains(vertex)) DFS(vertex, n-1);
+          visited.Remove(vertex);
+        }        
+      }
     }
   }
 }
